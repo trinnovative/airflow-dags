@@ -15,12 +15,38 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 from datetime import datetime
+from textwrap import dedent
 
 from airflow.models import DAG
 from airflow.operators.bash import BashOperator
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+DEFAULT_DATE = datetime(2016, 1, 1)
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+args = {
+    'owner': 'airflow',
+    'start_date': DEFAULT_DATE,
+}
+
+dag = DAG(dag_id='test_impersonation', default_args=args)
+
+run_as_user = 'airflow_test_user'
+
+test_command = dedent(
+    """\
+    if [ '{user}' != "$(whoami)" ]; then
+        echo current user is not {user}!
+        exit 1
+    fi
+    """.format(
+        user=run_as_user
+    )
+)
+
+task = BashOperator(
+    task_id='test_impersonated_user',
+    bash_command=test_command,
+    dag=dag,
+    run_as_user=run_as_user,
+)

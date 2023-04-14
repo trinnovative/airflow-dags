@@ -18,9 +18,14 @@
 from datetime import datetime
 
 from airflow.models import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+DEFAULT_DATE = datetime(2016, 1, 1)
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+args = {
+    'owner': 'airflow',
+    'start_date': DEFAULT_DATE,
+}
+
+dag = DAG(dag_id='test_localtaskjob_double_trigger', default_args=args)
+task = DummyOperator(task_id='test_localtaskjob_double_trigger_task', dag=dag)

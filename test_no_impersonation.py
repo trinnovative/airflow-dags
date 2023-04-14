@@ -15,12 +15,34 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 from datetime import datetime
+from textwrap import dedent
 
 from airflow.models import DAG
 from airflow.operators.bash import BashOperator
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+DEFAULT_DATE = datetime(2016, 1, 1)
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+args = {
+    'owner': 'airflow',
+    'start_date': DEFAULT_DATE,
+}
+
+dag = DAG(dag_id='test_no_impersonation', default_args=args)
+
+test_command = dedent(
+    """\
+    sudo ls
+    if [ $? -ne 0 ]; then
+        echo 'current uid does not have root privileges!'
+        exit 1
+    fi
+    """
+)
+
+task = BashOperator(
+    task_id='test_superuser',
+    bash_command=test_command,
+    dag=dag,
+)

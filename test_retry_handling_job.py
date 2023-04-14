@@ -15,12 +15,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from datetime import datetime
 
-from airflow.models import DAG
+from datetime import datetime, timedelta
+
+from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2016, 10, 5, 19),
+    'email': ['airflow@example.com'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 4,
+    'retry_delay': timedelta(seconds=0),
+}
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+dag = DAG('test_retry_handling_job', default_args=default_args, schedule_interval='@once')
+
+task1 = BashOperator(task_id='test_retry_handling_op', bash_command='exit 1', dag=dag)

@@ -15,12 +15,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from datetime import datetime
 
 from airflow.models import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.utils.timezone import datetime
 
-DEFAULT_DATE = datetime(2019, 12, 1)
-
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+# The schedule_interval specified here is an INVALID
+# Cron expression. This invalid DAG will be used to
+# test whether dagbag.process_file() can identify
+# invalid Cron expression.
+dag1 = DAG(dag_id='test_invalid_cron', start_date=datetime(2015, 1, 1), schedule_interval="0 100 * * *")
+dag1_task1 = DummyOperator(task_id='task1', dag=dag1, owner='airflow')

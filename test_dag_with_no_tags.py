@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,12 +14,18 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 from datetime import datetime
 
 from airflow.models import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+DEFAULT_DATE = datetime(2016, 1, 1)
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+default_args = {
+    "owner": "airflow",
+    "start_date": DEFAULT_DATE,
+}
+
+with DAG(dag_id="test_dag_with_no_tags", default_args=default_args, schedule_interval='@once') as dag:
+    task_a = DummyOperator(task_id="test_task_a")

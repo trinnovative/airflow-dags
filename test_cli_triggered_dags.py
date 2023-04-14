@@ -15,12 +15,32 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from datetime import datetime
+
+
+from datetime import timedelta
 
 from airflow.models import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.utils.timezone import datetime
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+DEFAULT_DATE = datetime(2016, 1, 1)
+default_args = dict(start_date=DEFAULT_DATE, owner='airflow')
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+
+def fail():
+    raise ValueError('Expected failure.')
+
+
+def success(ti=None, *args, **kwargs):
+    if ti.execution_date != DEFAULT_DATE + timedelta(days=1):
+        fail()
+
+
+# DAG tests that tasks ignore all dependencies
+
+dag1 = DAG(
+    dag_id='test_run_ignores_all_dependencies', default_args=dict(depends_on_past=True, **default_args)
+)
+dag1_task1 = PythonOperator(task_id='test_run_dependency_task', python_callable=fail, dag=dag1)
+dag1_task2 = PythonOperator(task_id='test_run_dependent_task', python_callable=success, dag=dag1)
+dag1_task1.set_downstream(dag1_task2)

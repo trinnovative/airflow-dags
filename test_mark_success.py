@@ -16,11 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 from datetime import datetime
+from time import sleep
 
 from airflow.models import DAG
-from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 
-DEFAULT_DATE = datetime(2019, 12, 1)
+DEFAULT_DATE = datetime(2016, 1, 1)
 
-dag = DAG(dag_id='test_dag_under_subdir2', start_date=DEFAULT_DATE, schedule_interval=None)
-task = BashOperator(task_id='task1', bash_command='echo "test dag under sub directory subdir2"', dag=dag)
+args = {
+    'owner': 'airflow',
+    'start_date': DEFAULT_DATE,
+}
+
+
+dag = DAG(dag_id='test_mark_success', default_args=args)
+task = PythonOperator(task_id='task1', python_callable=lambda x: sleep(x), op_args=[600], dag=dag)
